@@ -105,7 +105,7 @@ class DifyQuoteExt(Star):
             )
 
         req.system_prompt += (
-            "  ]"
+            "  ]\n"
             "}\n"
             f"[history_end]\n"
         )
