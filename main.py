@@ -39,7 +39,7 @@ class DifyQuoteExt(Star):
                         break
             if image_seg:
                 try:
-                    req.image_urls.append(await image_seg.convert_to_file_path())
+                    req.image_urls.append(await image_seg.convert_to_base64())
                     req.system_prompt += (
                         f"  \"image\": true\n"
                     )
