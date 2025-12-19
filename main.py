@@ -32,7 +32,7 @@ class DifyQuoteExt(Star):
         if event.message_obj.group_id:
             group_name = event.message_obj.group.group_name
             if group_name:
-                req.system_prompt += f"  \"groupName\": \"{group_name}\"\n"
+                req.system_prompt += f"  \"groupName\": \"{group_name}\",\n"
 
         current_time = None
         if self.timezone:
@@ -65,8 +65,8 @@ class DifyQuoteExt(Star):
             req.system_prompt += (
                 f"\n[quote]\n"
                 "{\n"
-                f"  \"sender\": \"{sender_info}\"\n"
-                f"  \"message\": \"{message_str}\"\n"
+                f"  \"sender\": \"{sender_info}\",\n"
+                f"  \"message\": \"{message_str}\",\n"
                 # f"[quote_end]\n"
             )
             
@@ -80,11 +80,13 @@ class DifyQuoteExt(Star):
             if image_seg:
                 try:
                     req.image_urls.append(await image_seg.convert_to_base64())
-                    req.system_prompt += (
-                        f"  \"containImage\": true\n"
-                    )
+                    req.system_prompt += "  \"containImage\": true\n"
                 except BaseException as e:
                     logger.error(f"处理引用图片失败: {e}")
+                    req.system_prompt += "  \"containImage\": false\n"
+            else:
+                req.system_prompt += "  \"containImage\": false\n"
+            
             req.system_prompt += (
                 "}\n"
                 f"[quote_end]\n"
@@ -99,7 +101,7 @@ class DifyQuoteExt(Star):
 
         for chat_log in self.session_chats[event.unified_msg_origin]:
             req.system_prompt += (
-                f"    \"{chat_log}\","
+                f"    \"{chat_log}\",\n"
             )
 
         req.system_prompt += (
