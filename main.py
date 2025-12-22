@@ -29,15 +29,14 @@ class DifyQuoteExt(Star):
 
         """基本信息"""
         info_json = {}
-        # req.system_prompt = (
-        #     f"[info]\n"
-        #     "{\n"
-        # )
         if event.message_obj.group_id:
-            group_name = event.message_obj.group.group_name
-            if group_name:
-                # req.system_prompt += f"  \"groupName\": \"{group_name}\",\n"
-                info_json["groupName"] = group_name
+            info_json["isGroup"] = True
+            if event.message_obj.group:
+                info_json["groupName"] = event.message_obj.group.group_name or "[null]"
+            else:
+                info_json["groupName"] = "[null]"
+        else:
+            info_json["isGroup"] = False
 
         current_time = None
         if self.timezone:
@@ -51,13 +50,7 @@ class DifyQuoteExt(Star):
             current_time = (
                 datetime.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M (%Z)")
             )
-        # req.system_prompt += f"  \"dateTime\": \"{current_time}\"\n"
         info_json["dateTime"] = current_time
-        
-        # req.system_prompt += (
-        #     "}\n"
-        #     f"[info_end]\n"
-        # )
         sys_prompt_json["info"] = info_json
 
         """引用"""
@@ -68,13 +61,6 @@ class DifyQuoteExt(Star):
                 break
         if quote:
             quote_json = {}
-            # req.system_prompt += (
-            #     f"\n[quote]\n"
-            #     "{\n"
-            #     f"  \"sender\": \"{sender_info}\",\n"
-            #     f"  \"message\": \"{message_str}\",\n"
-            #     # f"[quote_end]\n"
-            # )
             quote_json["sender"] = quote.sender_nickname or "[null]"
             quote_json["message"] = quote.message_str or "[Empty Text]"
             
@@ -94,29 +80,13 @@ class DifyQuoteExt(Star):
                     quote_json["containImage"] = False
             else:
                 quote_json["containImage"] = False
-            
-            # req.system_prompt += (
-            #     "}\n"
-            #     f"[quote_end]\n"
-            # )
             sys_prompt_json["quote"] = quote_json
 
         """聊天记录"""
         history_json = []
-        # req.system_prompt += (
-        #     f"\n[history]\n"
-        #     "{\n"
-        #     f"  \"history\": [\n"
-        # )
-
         for chat_log in self.session_chats[event.unified_msg_origin]:
             history_json.append(chat_log)
 
-        # req.system_prompt += (
-        #     "  ]\n"
-        #     "}\n"
-        #     f"[history_end]\n"
-        # )
         sys_prompt_json["history"] = history_json
         req.system_prompt = json.dumps(sys_prompt_json, ensure_ascii=False) + "\n"
 
