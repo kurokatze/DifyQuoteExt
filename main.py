@@ -24,15 +24,19 @@ class DifyQuoteExt(Star):
 
     @filter.on_llm_request()
     async def on_request(self, event: AstrMessageEvent, req: ProviderRequest): # 请注意有三个参数
+        sys_prompt_json = {}
+
         """基本信息"""
-        req.system_prompt = (
-            f"[info]\n"
-            "{\n"
-        )
+        info_json = {}
+        # req.system_prompt = (
+        #     f"[info]\n"
+        #     "{\n"
+        # )
         if event.message_obj.group_id:
             group_name = event.message_obj.group.group_name
             if group_name:
-                req.system_prompt += f"  \"groupName\": \"{group_name}\",\n"
+                # req.system_prompt += f"  \"groupName\": \"{group_name}\",\n"
+                info_json["groupName"] = group_name
 
         current_time = None
         if self.timezone:
@@ -46,12 +50,14 @@ class DifyQuoteExt(Star):
             current_time = (
                 datetime.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M (%Z)")
             )
-        req.system_prompt += f"  \"dateTime\": \"{current_time}\"\n"
+        # req.system_prompt += f"  \"dateTime\": \"{current_time}\"\n"
+        info_json["dateTime"] = current_time
         
-        req.system_prompt += (
-            "}\n"
-            f"[info_end]\n"
-        )
+        # req.system_prompt += (
+        #     "}\n"
+        #     f"[info_end]\n"
+        # )
+        sys_prompt_json["info"] = info_json
 
         """引用"""
         quote = None
@@ -60,15 +66,16 @@ class DifyQuoteExt(Star):
                 quote = comp
                 break
         if quote:
-            sender_info = quote.sender_nickname or "[null]"
-            message_str = quote.message_str or "[Empty Text]"
-            req.system_prompt += (
-                f"\n[quote]\n"
-                "{\n"
-                f"  \"sender\": \"{sender_info}\",\n"
-                f"  \"message\": \"{message_str}\",\n"
-                # f"[quote_end]\n"
-            )
+            quote_json = {}
+            # req.system_prompt += (
+            #     f"\n[quote]\n"
+            #     "{\n"
+            #     f"  \"sender\": \"{sender_info}\",\n"
+            #     f"  \"message\": \"{message_str}\",\n"
+            #     # f"[quote_end]\n"
+            # )
+            quote_json["sender"] = quote.sender_nickname or "[null]"
+            quote_json["message"] = quote.message_str or "[Empty Text]"
             
             # 处理引用图片
             image_seg = None
@@ -80,35 +87,37 @@ class DifyQuoteExt(Star):
             if image_seg:
                 try:
                     req.image_urls.append(await image_seg.convert_to_base64())
-                    req.system_prompt += "  \"containImage\": true\n"
+                    quote_json["containImage"] = True
                 except BaseException as e:
                     logger.error(f"处理引用图片失败: {e}")
-                    req.system_prompt += "  \"containImage\": false\n"
+                    quote_json["containImage"] = False
             else:
-                req.system_prompt += "  \"containImage\": false\n"
+                quote_json["containImage"] = False
             
-            req.system_prompt += (
-                "}\n"
-                f"[quote_end]\n"
-            )
+            # req.system_prompt += (
+            #     "}\n"
+            #     f"[quote_end]\n"
+            # )
+            sys_prompt_json["quote"] = quote_json
 
         """聊天记录"""
-        req.system_prompt += (
-            f"\n[history]\n"
-            "{\n"
-            f"  \"history\": [\n"
-        )
+        history_json = []
+        # req.system_prompt += (
+        #     f"\n[history]\n"
+        #     "{\n"
+        #     f"  \"history\": [\n"
+        # )
 
         for chat_log in self.session_chats[event.unified_msg_origin]:
-            req.system_prompt += (
-                f"    \"{chat_log}\",\n"
-            )
+            history_json.append(chat_log)
 
-        req.system_prompt += (
-            "  ]\n"
-            "}\n"
-            f"[history_end]\n"
-        )
+        # req.system_prompt += (
+        #     "  ]\n"
+        #     "}\n"
+        #     f"[history_end]\n"
+        # )
+        sys_prompt_json["history"] = history_json
+        req.system_prompt = json.dumps(sys_prompt_json, ensure_ascii=False) + "\n"
 
     """记录群聊消息"""
     @filter.event_message_type(filter.EventMessageType.GROUP_MESSAGE)
