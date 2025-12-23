@@ -97,7 +97,6 @@ class DifyQuoteExt(Star):
 
         parts = [f"[{datetime_str}][{event.message_obj.sender.nickname}]: "]
 
-
         for comp in event.get_messages():
             if isinstance(comp, Plain):
                 parts.append(f" {comp.text}")
@@ -110,6 +109,37 @@ class DifyQuoteExt(Star):
         logger.debug(f"ltm | {event.unified_msg_origin} | {final_message}")
         self.session_chats[event.unified_msg_origin].append(final_message)
 
+        """获取群聊最大消息数量"""
+        cfg = self.context.get_config(umo=event.unified_msg_origin)
+        try:
+            max_cnt = int(cfg["provider_ltm_settings"]["group_message_max_cnt"])
+        except BaseException as e:
+            logger.error(e)
+            max_cnt = 100
+
+        while len(self.session_chats[event.unified_msg_origin]) > max_cnt:
+            self.session_chats[event.unified_msg_origin].pop(0)
+
+    @filter.after_message_sent()
+    async def after_message_sent(self, event: AstrMessageEvent):
+        if event.unified_msg_origin not in self.session_chats:
+            return
+
+        datetime_str = datetime.datetime.now().strftime("%H:%M:%S")
+
+        parts = [f"[{datetime_str}][你]: "]
+        for comp in event.get_messages():
+            if isinstance(comp, Plain):
+                parts.append(f" {comp.text}")
+            elif isinstance(comp, Image):
+                parts.append(" [图片]")
+            elif isinstance(comp, At):
+                parts.append(f" [At: {comp.name}]")
+        final_message = "".join(parts)
+        logger.debug(
+                f"Recorded AI response: {event.unified_msg_origin} | {final_message}"
+            )
+        self.session_chats[event.unified_msg_origin].append(final_message)
         """获取群聊最大消息数量"""
         cfg = self.context.get_config(umo=event.unified_msg_origin)
         try:
