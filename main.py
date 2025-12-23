@@ -93,7 +93,7 @@ class DifyQuoteExt(Star):
     """记录群聊消息"""
     @filter.event_message_type(filter.EventMessageType.GROUP_MESSAGE)
     async def on_group_message(self, event: AstrMessageEvent):
-        datetime_str = datetime.datetime.now().strftime("%H:%M:%S")
+        datetime_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         parts = [f"[{datetime_str}][User ID: {event.message_obj.sender.user_id}, Nickname: {event.message_obj.sender.nickname}]: "]
 
@@ -129,7 +129,7 @@ class DifyQuoteExt(Star):
         if event.unified_msg_origin not in self.session_chats:
             return
 
-        datetime_str = datetime.datetime.now().strftime("%H:%M:%S")
+        datetime_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         if resp.completion_text:
             parts = [f"[{datetime_str}][你]: "]
