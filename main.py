@@ -4,7 +4,7 @@ import zoneinfo
 from collections import defaultdict
 
 from astrbot.api.event import filter, AstrMessageEvent
-from astrbot.api.provider import ProviderRequest
+from astrbot.api.provider import LLMResponse, ProviderRequest
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 from astrbot.core.message.components import Image, Reply, Plain, At
@@ -120,36 +120,31 @@ class DifyQuoteExt(Star):
         while len(self.session_chats[event.unified_msg_origin]) > max_cnt:
             self.session_chats[event.unified_msg_origin].pop(0)
 
-    @filter.after_message_sent()
-    async def after_message_sent(self, event: AstrMessageEvent):
+    @filter.on_llm_response()
+    async def on_llm_resp(self, event: AstrMessageEvent, resp: LLMResponse): # 请注意有三个参数
         if event.unified_msg_origin not in self.session_chats:
             return
 
         datetime_str = datetime.datetime.now().strftime("%H:%M:%S")
 
-        parts = [f"[{datetime_str}][你]: "]
-        for comp in event.get_messages():
-            if isinstance(comp, Plain):
-                parts.append(f" {comp.text}")
-            elif isinstance(comp, Image):
-                parts.append(" [图片]")
-            elif isinstance(comp, At):
-                parts.append(f" [At: {comp.name}]")
-        final_message = "".join(parts)
-        logger.debug(
-                f"Recorded AI response: {event.unified_msg_origin} | {final_message}"
-            )
-        self.session_chats[event.unified_msg_origin].append(final_message)
-        """获取群聊最大消息数量"""
-        cfg = self.context.get_config(umo=event.unified_msg_origin)
-        try:
-            max_cnt = int(cfg["provider_ltm_settings"]["group_message_max_cnt"])
-        except BaseException as e:
-            logger.error(e)
-            max_cnt = 100
+        if resp.completion_text:
+            parts = [f"[{datetime_str}][你]: "]
+            parts.append(f" {resp.completion_text}")                
+            final_message = "".join(parts)
+            logger.debug(
+                    f"Recorded AI response: {event.unified_msg_origin} | {final_message}"
+                )
+            self.session_chats[event.unified_msg_origin].append(final_message)
+            """获取群聊最大消息数量"""
+            cfg = self.context.get_config(umo=event.unified_msg_origin)
+            try:
+                max_cnt = int(cfg["provider_ltm_settings"]["group_message_max_cnt"])
+            except BaseException as e:
+                logger.error(e)
+                max_cnt = 100
 
-        while len(self.session_chats[event.unified_msg_origin]) > max_cnt:
-            self.session_chats[event.unified_msg_origin].pop(0)
+            while len(self.session_chats[event.unified_msg_origin]) > max_cnt:
+                self.session_chats[event.unified_msg_origin].pop(0)
 
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
