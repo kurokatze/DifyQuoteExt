@@ -88,7 +88,7 @@ class DifyQuoteExt(Star):
             history_json.append(chat_log)
 
         sys_prompt_json["history"] = history_json
-        req.system_prompt = json.dumps(sys_prompt_json, ensure_ascii=False) + "\n"
+        req.system_prompt += f"\n[json]\n{json.dumps(sys_prompt_json, ensure_ascii=False)}\n[json_end]\n"
 
     """记录群聊消息"""
     @filter.event_message_type(filter.EventMessageType.GROUP_MESSAGE)
