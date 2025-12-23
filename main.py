@@ -95,15 +95,15 @@ class DifyQuoteExt(Star):
     async def on_group_message(self, event: AstrMessageEvent):
         datetime_str = datetime.datetime.now().strftime("%H:%M:%S")
 
-        parts = [f"[{datetime_str}][{event.message_obj.sender.nickname}]: "]
+        parts = [f"[{datetime_str}][User ID: {event.message_obj.sender.user_id}, Nickname: {event.message_obj.sender.nickname}]: "]
 
         for comp in event.get_messages():
             if isinstance(comp, Plain):
-                parts.append(f" {comp.text}")
+                parts.append(f"{comp.text}")
             elif isinstance(comp, Image):
-                parts.append(" [图片]")
+                parts.append("[图片]")
             elif isinstance(comp, At):
-                parts.append(f" [At: {comp.name}]")
+                parts.append(f"[At: {comp.name}]")
 
         final_message = "".join(parts)
         logger.debug(f"ltm | {event.unified_msg_origin} | {final_message}")
