@@ -122,6 +122,10 @@ class DifyQuoteExt(Star):
 
     @filter.on_llm_response()
     async def on_llm_resp(self, event: AstrMessageEvent, resp: LLMResponse): # 请注意有三个参数
+        """并非群聊消息，忽略"""
+        if not event.message_obj.group_id:
+            return
+
         if event.unified_msg_origin not in self.session_chats:
             return
 
