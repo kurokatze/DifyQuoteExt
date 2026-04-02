@@ -13,10 +13,15 @@ class Meme:
 
 
 class MemeConfig:
-    def __init__(self, memes_dir: str):
+    def __init__(self, memes_dir: str, emotions_file: str | None = None):
         self.memes_dir = Path(memes_dir)
         self.config_file = self.memes_dir / "memes.json"
-        self.emotions_file = self.memes_dir / "config.json"
+        
+        if emotions_file:
+            self.emotions_file = Path(emotions_file)
+        else:
+            self.emotions_file = self.memes_dir / "config.json"
+        
         self._memes: dict[str, Meme] = {}
         self._emotions: list[str] = []
         self._load()

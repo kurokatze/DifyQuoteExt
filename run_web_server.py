@@ -21,12 +21,16 @@ if __name__ == "__main__":
     memes_dir = get_memes_dir()
     memes_dir.mkdir(parents=True, exist_ok=True)
     
-    server = MemeWebServer(str(memes_dir), host="0.0.0.0", port=6186)
+    plugin_dir = Path(__file__).parent
+    emotions_file = plugin_dir / "memes" / "config.json"
+    
+    server = MemeWebServer(str(memes_dir), emotions_file=str(emotions_file))
     
     print("=" * 50)
     print("🎭 Meme Web Server 启动中...")
     print(f"📍 访问地址: http://localhost:6186")
     print(f"📁 图片存储目录: {memes_dir.absolute()}")
+    print(f"📄 表情配置: {emotions_file}")
     print("=" * 50)
     
     try:

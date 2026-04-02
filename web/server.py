@@ -55,7 +55,7 @@ def is_safe_filename(filename: str) -> bool:
 
 
 class MemeWebServer:
-    def __init__(self, memes_dir: str, host: str = "0.0.0.0", port: int = 6186):
+    def __init__(self, memes_dir: str, emotions_file: str | None = None, host: str = "0.0.0.0", port: int = 6186):
         self.memes_dir = Path(memes_dir)
         self.memes_dir.mkdir(parents=True, exist_ok=True)
         
@@ -66,7 +66,7 @@ class MemeWebServer:
         
         web_dir = Path(__file__).parent
         self.static_folder = web_dir / "static"
-        self.meme_config = MemeConfig(str(self.memes_dir))
+        self.meme_config = MemeConfig(str(self.memes_dir), emotions_file)
         self.app = self._create_app(web_dir)
 
     def _create_app(self, web_dir: Path) -> Quart:

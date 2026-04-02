@@ -37,7 +37,10 @@ class DifyQuoteExt(Star):
         
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
-        self.web_server = MemeWebServer(str(self.memes_dir), host="0.0.0.0", port=6186)
+        plugin_dir = Path(__file__).parent
+        emotions_file = plugin_dir / "memes" / "config.json"
+        
+        self.web_server = MemeWebServer(str(self.memes_dir), emotions_file=str(emotions_file))
         self.web_server_task = asyncio.create_task(self.web_server.start())
         logger.info("Meme Web Server 已启动: http://0.0.0.0:6186")
 
