@@ -11,6 +11,7 @@ from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 from astrbot.core.message.components import Image, Reply, Plain, At
 from astrbot.core.message.message_event_result import MessageChain
+from astrbot.core.utils.astrbot_path import get_astrbot_data_path
 
 from .web import MemeWebServer
 from .meme_reply import MemeReplyProcessor
@@ -27,20 +28,16 @@ class DifyQuoteExt(Star):
         self.timezone = cfg.get("timezone")
         self.meme_reply_enabled = cfg.get("meme_reply_enabled", True)
         
-        plugin_dir = Path(__file__).parent
-        memes_dir = plugin_dir / "memes"
-        memes_dir.mkdir(exist_ok=True)
+        self.memes_dir = Path(get_astrbot_data_path()) / "plugin_data" / self.name
+        self.memes_dir.mkdir(parents=True, exist_ok=True)
         
-        self.meme_processor = MemeReplyProcessor(str(memes_dir), enabled=self.meme_reply_enabled)
+        self.meme_processor = MemeReplyProcessor(str(self.memes_dir), enabled=self.meme_reply_enabled)
         self.web_server: MemeWebServer | None = None
         self.web_server_task: asyncio.Task | None = None
         
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
-        plugin_dir = Path(__file__).parent
-        memes_dir = plugin_dir / "memes"
-        
-        self.web_server = MemeWebServer(str(memes_dir), host="0.0.0.0", port=6186)
+        self.web_server = MemeWebServer(str(self.memes_dir), host="0.0.0.0", port=6186)
         self.web_server_task = asyncio.create_task(self.web_server.start())
         logger.info("Meme Web Server 已启动: http://0.0.0.0:6186")
 
