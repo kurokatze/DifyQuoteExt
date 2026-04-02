@@ -14,18 +14,27 @@ class MemeReplyResult:
 
 
 class MemeReplyParser:
-    IMG_PATTERN = re.compile(r'\[img\]\[([^\]]+)\]')
+    IMG_PATTERN_STANDARD = re.compile(r'\[img\]\[([^\]]+)\]')
+    IMG_PATTERN_SIMPLE = re.compile(r'\[img\]([^\s\[\]]+)')
     
     @classmethod
     def extract_filename(cls, text: str) -> Optional[str]:
-        match = cls.IMG_PATTERN.search(text)
+        match = cls.IMG_PATTERN_STANDARD.search(text)
         if match:
             return match.group(1)
+        
+        match = cls.IMG_PATTERN_SIMPLE.search(text)
+        if match:
+            filename = match.group(1)
+            if filename and not filename.startswith('['):
+                return filename
         return None
     
     @classmethod
     def remove_img_tag(cls, text: str) -> str:
-        return cls.IMG_PATTERN.sub('', text).strip()
+        text = cls.IMG_PATTERN_STANDARD.sub('', text)
+        text = cls.IMG_PATTERN_SIMPLE.sub('', text)
+        return text.strip()
     
     @classmethod
     def parse(cls, text: str) -> tuple[str, Optional[str]]:
