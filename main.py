@@ -12,8 +12,8 @@ from astrbot.api import logger
 from astrbot.core.message.components import Image, Reply, Plain, At
 from astrbot.core.message.message_event_result import MessageChain
 
-from web import MemeWebServer
-from meme_reply import MemeReplyProcessor
+from .web import MemeWebServer
+from .meme_reply import MemeReplyProcessor
 
 @register("DifyQuoteExt", "MadCat", "DifyQuoteExt for AstrBot", "1.0.0")
 class DifyQuoteExt(Star):
