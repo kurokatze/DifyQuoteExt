@@ -171,8 +171,10 @@ class DifyQuoteExt(Star):
             while len(self.session_chats[event.unified_msg_origin]) > max_cnt:
                 self.session_chats[event.unified_msg_origin].pop(0)
 
+        logger.info(f"LLM响应内容: {resp.completion_text}")
         if resp.completion_text:
             result = self.meme_processor.process(resp.completion_text)
+            logger.info(f"处理后结果: {result}")
             if result.has_image and result.image_base64:
                 if resp.result_chain is None:
                     resp.result_chain = MessageChain()
