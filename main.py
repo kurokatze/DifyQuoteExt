@@ -1,13 +1,19 @@
+import asyncio
 import datetime
 import json
 import zoneinfo
 from collections import defaultdict
+from pathlib import Path
 
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.provider import LLMResponse, ProviderRequest
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 from astrbot.core.message.components import Image, Reply, Plain, At
+from astrbot.core.message.message_event_result import MessageChain
+
+from web import MemeWebServer
+from meme_reply import MemeReplyProcessor
 
 @register("DifyQuoteExt", "MadCat", "DifyQuoteExt for AstrBot", "1.0.0")
 class DifyQuoteExt(Star):
@@ -19,9 +25,24 @@ class DifyQuoteExt(Star):
 
         cfg = context.get_config()
         self.timezone = cfg.get("timezone")
+        self.meme_reply_enabled = cfg.get("meme_reply_enabled", True)
+        
+        plugin_dir = Path(__file__).parent
+        memes_dir = plugin_dir / "memes"
+        memes_dir.mkdir(exist_ok=True)
+        
+        self.meme_processor = MemeReplyProcessor(str(memes_dir), enabled=self.meme_reply_enabled)
+        self.web_server: MemeWebServer | None = None
+        self.web_server_task: asyncio.Task | None = None
         
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
+        plugin_dir = Path(__file__).parent
+        memes_dir = plugin_dir / "memes"
+        
+        self.web_server = MemeWebServer(str(memes_dir), host="0.0.0.0", port=6186)
+        self.web_server_task = asyncio.create_task(self.web_server.start())
+        logger.info("Meme Web Server 已启动: http://0.0.0.0:6186")
 
     @filter.on_llm_request()
     async def on_request(self, event: AstrMessageEvent, req: ProviderRequest): # 请注意有三个参数
@@ -150,5 +171,22 @@ class DifyQuoteExt(Star):
             while len(self.session_chats[event.unified_msg_origin]) > max_cnt:
                 self.session_chats[event.unified_msg_origin].pop(0)
 
+        if resp.completion_text:
+            result = self.meme_processor.process(resp.completion_text)
+            if result.has_image and result.image_base64:
+                if resp.result_chain is None:
+                    resp.result_chain = MessageChain()
+                resp.result_chain.chain.append(Image.fromBase64(result.image_base64))
+                resp.completion_text = ""
+            else:
+                resp.completion_text = result.text
+
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
+        if self.web_server_task:
+            self.web_server_task.cancel()
+            try:
+                await self.web_server_task
+            except asyncio.CancelledError:
+                pass
+            logger.info("Meme Web Server 已停止")

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表情管理</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="header">
+        <h1>表情管理</h1>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="card">
+                <h2>上传新表情</h2>
+                <div id="message" class="message"></div>
+                <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="fileInput" class="file-input-label" id="fileLabel">
+                            <span class="file-input-icon">+</span>
+                            <span>点击选择图片</span>
+                        </label>
+                        <input type="file" id="fileInput" name="file" accept=".jpg,.jpeg,.png,.webp,.gif">
+                        <div id="fileName" class="file-name"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="nameInput">表情名称</label>
+                        <input type="text" id="nameInput" name="name" placeholder="例如：开心大笑" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tagsInput">情绪标签</label>
+                        <input type="text" id="tagsInput" name="tags" placeholder="请输入或选择标签，用逗号分隔">
+                        <div id="emotionPicker" class="emotion-picker"></div>
+                        <span id="tagsToggle" class="tags-toggle">更多 ↓</span>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">上传表情</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="card">
+                <h2>表情库</h2>
+                <div class="search-section">
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="搜索名称或标签...">
+                        <button class="btn btn-primary" id="searchBtn">搜索</button>
+                        <button class="btn btn-secondary" id="clearSearchBtn">全部</button>
+                    </div>
+                </div>
+                <div id="memeGrid" class="meme-grid">
+                    <div class="empty-state"><p>加载中...</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>编辑表情</h3>
+            <form id="editForm" class="upload-form">
+                <input type="hidden" id="editFilename">
+                <div class="form-group">
+                    <label for="editName">表情名称</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTags">情绪标签</label>
+                    <input type="text" id="editTags" placeholder="多个标签用逗号分隔">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-secondary" id="closeModalBtn">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/scripts/app.js"></script>
+</body>
+</html>
